@@ -40,11 +40,21 @@ def get_embeddings(texts):
     return qna
 
 def query(prompt, qna_retriever):
-    print(f"User prompt: {prompt}")
     print(f"Answer: {qna_retriever.run(prompt)}")
 
 if __name__ == '__main__':
     load_dotenv()
     texts = process_data()
     qna_retriever = get_embeddings(texts)
-    query("What did Ichikawa Danjuro star in?", qna_retriever)
+    
+    while True:
+        prompt = input("Prompt: ")
+        
+        if prompt == "":
+            break
+        
+        query(prompt, qna_retriever)
+        cont = input("Press 'Enter' to prompt again.")
+        
+        if cont != "":
+            break
