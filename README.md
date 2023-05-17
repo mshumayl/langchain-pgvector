@@ -5,3 +5,6 @@ This program uses LangChain to fine-tune a large-language model with the documen
 1. Create a new [virtual environment](https://docs.python.org/3/library/venv.html#module-venv).
 2. Install dependencies with `pip install -r requirements.txt`.
 3. Run the program with `python qna.py`.
+
+### How to fine-tune it on my own documents?
+Simply replace the `.txt` files in the `/documents` directory with your own documents and run the program.
