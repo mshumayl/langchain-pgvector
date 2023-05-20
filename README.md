@@ -1,5 +1,5 @@
 ### What is this?
-This is a simple CLI Q&A tool that uses LangChain to generate document embeddings, store them in a vector store ([PGVector](https://python.langchain.com/en/latest/modules/indexes/vectorstores/examples/pgvector.html) hosted on Supabase), retrieve them based on input similarity, and augment the LLM prompt with the knowledge base context.
+This is a simple CLI Q&A tool that uses LangChain to generate document embeddings using HuggingFace embeddings, store them in a vector store ([PGVector](https://python.langchain.com/en/latest/modules/indexes/vectorstores/examples/pgvector.html) hosted on Supabase), retrieve them based on input similarity, and augment the LLM prompt with the knowledge base context.
 
 The knowledge base documents are stored in the `/documents` directory.
 
