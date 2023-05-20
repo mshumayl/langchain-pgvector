@@ -1,9 +1,10 @@
 import time
+import os
 from dotenv import load_dotenv
-from langchain.embeddings import OpenAIEmbeddings
+from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.document_loaders import DirectoryLoader, TextLoader
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.vectorstores import Chroma
+from langchain.vectorstores.pgvector import PGVector
 from langchain.chains import RetrievalQA
 from langchain import OpenAI
 
@@ -22,31 +23,60 @@ def process_data():
     
     return texts
 
-def get_embeddings(texts):
-    print("Getting embeddings...")
-    embeddings = OpenAIEmbeddings()
+def create_retriever(initialize=False):
+    COLLECTION_NAME = "supabase_test"
+    
+     #Supabase PGVector store
+    CONNECTION_STRING = PGVector.connection_string_from_db_params(
+        driver=os.environ.get("PGVECTOR_DRIVER"),
+        host=os.environ.get("PGVECTOR_HOST"),
+        port=int(os.environ.get("PGVECTOR_PORT")),
+        database=os.environ.get("PGVECTOR_DATABASE"),
+        user=os.environ.get("PGVECTOR_USER"),
+        password=os.environ.get("PGVECTOR_PASSWORD"),
+    )
+    
+    print("Getting base embeddings from HuggingFace...")
+    embeddings = HuggingFaceEmbeddings()
     print("Embeddings loaded.")
     
-    print("Creating vector store...")
-    vector_store = Chroma.from_documents(texts, embeddings)
-    print("Vector store created.")
+    if initialize:
+        texts = process_data() 
+
+        print("Creating vector store...")
+        vector_store = PGVector.from_documents(
+            documents=texts, 
+            embedding=embeddings,
+            collection_name=COLLECTION_NAME,
+            connection_string=CONNECTION_STRING
+        )
+        print("Vector store created.")
+    else:
+        print("Fetching vector store...")
+        vector_store = PGVector(
+            connection_string=CONNECTION_STRING,
+            collection_name=COLLECTION_NAME,
+            embedding_function=embeddings
+        )
     
-    qna = RetrievalQA.from_chain_type(
+    qna_retriever = RetrievalQA.from_chain_type(
         llm=OpenAI(),
         chain_type="stuff",
         retriever=vector_store.as_retriever()
     )
     
-    return qna
+    return qna_retriever
 
 def query(prompt, qna_retriever):
     print(f"Answer: {qna_retriever.run(prompt)}")
 
 if __name__ == '__main__':
-    load_dotenv()
-    texts = process_data()
-    qna_retriever = get_embeddings(texts)
+    INITIALIZE = False # Change to `True` if Supabase PGVector is already initialized.
     
+    load_dotenv()
+    
+    qna_retriever = create_retriever(initialize=INITIALIZE)
+
     while True:
         prompt = input("Prompt: ")
         
@@ -54,7 +84,7 @@ if __name__ == '__main__':
             break
         
         query(prompt, qna_retriever)
-        cont = input("Press 'Enter' to prompt again.")
+        cont = input("Press 'Enter' to prompt again.\n")
         
         if cont != "":
             break
